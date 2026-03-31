@@ -20,9 +20,10 @@ export default async function handler(req) {
   if (!prompt) return new Response(JSON.stringify({ error: 'Missing prompt' }), { status: 400 })
 
   const isLI = platform === 'linkedin'
-  const fullPrompt = `${prompt}, high quality, sport photography, natural light, no text, no logos, no watermarks, ${isLI ? 'horizontal composition, wide shot' : 'square composition, dynamic angle'}, photorealistic`
+  const fullPrompt = `${prompt}, high quality, sport photography, natural light, no text, no logos, no watermarks, ${isLI ? 'horizontal landscape composition, wide shot' : 'square composition, dynamic angle'}, photorealistic, professional photography`
 
   try {
+    // flux.2-max: free, image-only output, uses modalities: ['image']
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -32,9 +33,9 @@ export default async function handler(req) {
         'X-Title': 'Argo SMO'
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-image',
+        model: 'black-forest-labs/flux.2-max',
         messages: [{ role: 'user', content: fullPrompt }],
-        modalities: ['image', 'text'],
+        modalities: ['image'],
         image_config: {
           aspect_ratio: isLI ? '16:9' : '1:1'
         }
@@ -45,7 +46,7 @@ export default async function handler(req) {
     let data
     try { data = JSON.parse(rawText) }
     catch {
-      return new Response(JSON.stringify({ error: 'Parse error', raw: rawText.slice(0, 300) }), {
+      return new Response(JSON.stringify({ error: 'Parse error', raw: rawText.slice(0, 400) }), {
         status: 500, headers: { 'Content-Type': 'application/json' }
       })
     }
@@ -56,16 +57,14 @@ export default async function handler(req) {
       })
     }
 
-    // Per OpenRouter docs: images are in message.images[].image_url.url (NOT in content)
+    // Per OpenRouter docs: image is in message.images[0].image_url.url
     const message = data?.choices?.[0]?.message
-    const images = message?.images
-    const imageUrl = images?.[0]?.image_url?.url
+    const imageUrl = message?.images?.[0]?.image_url?.url
 
     if (!imageUrl) {
       return new Response(JSON.stringify({
         error: 'No image returned',
         messageKeys: message ? Object.keys(message) : null,
-        imagesValue: images,
         raw: JSON.stringify(data).slice(0, 600)
       }), {
         status: 500, headers: { 'Content-Type': 'application/json' }
