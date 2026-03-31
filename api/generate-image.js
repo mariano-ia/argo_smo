@@ -25,11 +25,15 @@ export default async function handler(req) {
     return new Response(JSON.stringify({ error: 'Missing prompt' }), { status: 400 })
   }
 
-  const aspectRatio = platform === 'linkedin' ? '16:9' : '1:1'
-  const fullPrompt = `${prompt}, high quality, sport photography, natural light, no text, no logos, no watermarks, ${platform === 'linkedin' ? 'horizontal composition' : 'square composition'}`
+  const isLI = platform === 'linkedin'
+  const width = isLI ? 1200 : 1024
+  const height = isLI ? 628 : 1024
+
+  const fullPrompt = `${prompt}, high quality, sport photography, natural light, no text, no logos, no watermarks, ${isLI ? 'horizontal composition, wide shot' : 'square composition, dynamic angle'}`
 
   try {
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    // Using OpenRouter with black-forest-labs/flux-schnell for image generation
+    const response = await fetch('https://openrouter.ai/api/v1/images/generations', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -38,23 +42,31 @@ export default async function handler(req) {
         'X-Title': 'Argo SMO'
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-image-preview',
-        modalities: ['image'],
-        messages: [{ role: 'user', content: fullPrompt }],
-        image_config: { aspect_ratio: aspectRatio }
+        model: 'black-forest-labs/flux-schnell',
+        prompt: fullPrompt,
+        n: 1,
+        size: `${width}x${height}`,
       })
     })
 
     const data = await response.json()
-    const images = data.choices?.[0]?.message?.images
-    if (!images || images.length === 0) {
+
+    if (!response.ok) {
+      return new Response(JSON.stringify({ error: 'OpenRouter error', raw: data }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+
+    const imageUrl = data?.data?.[0]?.url
+    if (!imageUrl) {
       return new Response(JSON.stringify({ error: 'No image returned', raw: data }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
       })
     }
 
-    return new Response(JSON.stringify({ image: images[0] }), {
+    return new Response(JSON.stringify({ image: imageUrl }), {
       headers: { 'Content-Type': 'application/json' }
     })
   } catch (e) {
