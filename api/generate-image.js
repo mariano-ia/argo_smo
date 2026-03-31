@@ -20,7 +20,7 @@ export default async function handler(req) {
   if (!prompt) return new Response(JSON.stringify({ error: 'Missing prompt' }), { status: 400 })
 
   const isLI = platform === 'linkedin'
-  const fullPrompt = `Generate an image: ${prompt}, high quality, sport photography, natural light, no text, no logos, no watermarks, ${isLI ? 'horizontal landscape composition, wide shot' : 'square composition, dynamic angle'}, photorealistic`
+  const fullPrompt = `${prompt}, high quality, sport photography, natural light, no text, no logos, no watermarks, ${isLI ? 'horizontal composition, wide shot' : 'square composition, dynamic angle'}, photorealistic`
 
   try {
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -35,6 +35,9 @@ export default async function handler(req) {
         model: 'google/gemini-2.5-flash-image',
         messages: [{ role: 'user', content: fullPrompt }],
         modalities: ['image', 'text'],
+        image_config: {
+          aspect_ratio: isLI ? '16:9' : '1:1'
+        }
       })
     })
 
@@ -42,7 +45,7 @@ export default async function handler(req) {
     let data
     try { data = JSON.parse(rawText) }
     catch {
-      return new Response(JSON.stringify({ error: 'Parse error', raw: rawText.slice(0, 500) }), {
+      return new Response(JSON.stringify({ error: 'Parse error', raw: rawText.slice(0, 300) }), {
         status: 500, headers: { 'Content-Type': 'application/json' }
       })
     }
@@ -53,32 +56,23 @@ export default async function handler(req) {
       })
     }
 
-    const fullRaw = JSON.stringify(data)
-    const content = data?.choices?.[0]?.message?.content
-    let imageData = null
+    // Per OpenRouter docs: images are in message.images[].image_url.url (NOT in content)
+    const message = data?.choices?.[0]?.message
+    const images = message?.images
+    const imageUrl = images?.[0]?.image_url?.url
 
-    if (Array.isArray(content)) {
-      for (const part of content) {
-        if (part.type === 'image_url' && part.image_url?.url) {
-          imageData = part.image_url.url
-          break
-        }
-        if (part.type === 'image' && part.source?.data) {
-          imageData = `data:${part.source.media_type || 'image/jpeg'};base64,${part.source.data}`
-          break
-        }
-      }
-    } else if (typeof content === 'string' && content.startsWith('data:image')) {
-      imageData = content
-    }
-
-    if (!imageData) {
-      return new Response(JSON.stringify({ error: 'No image in response', fullRaw: fullRaw.slice(0, 1000) }), {
+    if (!imageUrl) {
+      return new Response(JSON.stringify({
+        error: 'No image returned',
+        messageKeys: message ? Object.keys(message) : null,
+        imagesValue: images,
+        raw: JSON.stringify(data).slice(0, 600)
+      }), {
         status: 500, headers: { 'Content-Type': 'application/json' }
       })
     }
 
-    return new Response(JSON.stringify({ image: imageData }), {
+    return new Response(JSON.stringify({ image: imageUrl }), {
       headers: { 'Content-Type': 'application/json' }
     })
 
