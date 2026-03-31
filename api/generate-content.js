@@ -1,4 +1,4 @@
-export const config = { runtime: 'edge' }
+export const config = { maxDuration: 30 }
 
 const ARGO_SYSTEM_PROMPT = `Sos el departamento de marketing de Argo Method. Operás de forma autónoma.
 
@@ -52,22 +52,19 @@ Respondé SIEMPRE con este JSON exacto (sin markdown, sin explicaciones, sin bac
   }
 }`
 
-export default async function handler(req) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 })
+    return res.status(405).json({ error: 'Method not allowed' })
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'Missing ANTHROPIC_API_KEY' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    return res.status(500).json({ error: 'Missing ANTHROPIC_API_KEY' })
   }
 
   let body
   try {
-    body = await req.json()
+    body = req.body || {}
   } catch {
     body = {}
   }
@@ -116,19 +113,11 @@ Generá el contenido de hoy para Instagram y LinkedIn. Elegí pilares y temas qu
       const clean = text.replace(/```json|```/g, '').trim()
       parsed = JSON.parse(clean)
     } catch {
-      return new Response(JSON.stringify({ error: 'Parse error', raw: text }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      })
+      return res.status(500).json({ error: 'Parse error', raw: text })
     }
 
-    return new Response(JSON.stringify(parsed), {
-      headers: { 'Content-Type': 'application/json' }
-    })
+    return res.status(200).json(parsed)
   } catch (e) {
-    return new Response(JSON.stringify({ error: e.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    return res.status(500).json({ error: e.message })
   }
 }
