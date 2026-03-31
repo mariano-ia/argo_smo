@@ -1,29 +1,23 @@
-export const config = { runtime: 'edge' }
+// Node.js serverless function (NOT edge) - 60s timeout
+export const config = { maxDuration: 60 }
 
-export default async function handler(req) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 })
+    return res.status(405).json({ error: 'Method not allowed' })
   }
 
   const apiKey = process.env.OPENROUTER_API_KEY
   if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'Missing OPENROUTER_API_KEY' }), {
-      status: 500, headers: { 'Content-Type': 'application/json' }
-    })
+    return res.status(500).json({ error: 'Missing OPENROUTER_API_KEY' })
   }
 
-  let body
-  try { body = await req.json() }
-  catch { return new Response(JSON.stringify({ error: 'Invalid JSON' }), { status: 400 }) }
-
-  const { prompt, platform } = body
-  if (!prompt) return new Response(JSON.stringify({ error: 'Missing prompt' }), { status: 400 })
+  const { prompt, platform } = req.body || {}
+  if (!prompt) return res.status(400).json({ error: 'Missing prompt' })
 
   const isLI = platform === 'linkedin'
   const fullPrompt = `${prompt}, high quality, sport photography, natural light, no text, no logos, no watermarks, ${isLI ? 'horizontal landscape composition, wide shot' : 'square composition, dynamic angle'}, photorealistic, professional photography`
 
   try {
-    // flux.2-max: free, image-only output, uses modalities: ['image']
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -36,70 +30,40 @@ export default async function handler(req) {
         model: 'black-forest-labs/flux.2-max',
         messages: [{ role: 'user', content: fullPrompt }],
         modalities: ['image'],
-        image_config: {
-          aspect_ratio: isLI ? '16:9' : '1:1'
-        }
+        image_config: { aspect_ratio: isLI ? '16:9' : '1:1' }
       })
     })
 
-    const rawText = await response.text()
-    let data
-    try { data = JSON.parse(rawText) }
-    catch {
-      return new Response(JSON.stringify({ error: 'Parse error', raw: rawText.slice(0, 400) }), {
-        status: 500, headers: { 'Content-Type': 'application/json' }
-      })
-    }
+    const data = await response.json()
 
     if (!response.ok) {
-      return new Response(JSON.stringify({ error: 'OpenRouter error', status: response.status, raw: data }), {
-        status: 500, headers: { 'Content-Type': 'application/json' }
-      })
+      return res.status(500).json({ error: 'OpenRouter error', raw: data })
     }
 
-    // Per OpenRouter docs: image is in message.images[0].image_url.url
     const message = data?.choices?.[0]?.message
     const imageUrl = message?.images?.[0]?.image_url?.url
 
     if (!imageUrl) {
-      return new Response(JSON.stringify({
-        error: 'No image returned',
-        messageKeys: message ? Object.keys(message) : null,
-        raw: JSON.stringify(data).slice(0, 600)
-      }), {
-        status: 500, headers: { 'Content-Type': 'application/json' }
-      })
+      return res.status(500).json({ error: 'No image returned', messageKeys: message ? Object.keys(message) : null, raw: JSON.stringify(data).slice(0, 600) })
     }
 
-    // If already base64 data URL, return as-is
+    // If already base64, return directly
     if (imageUrl.startsWith('data:')) {
-      return new Response(JSON.stringify({ image: imageUrl }), {
-        headers: { 'Content-Type': 'application/json' }
-      })
+      return res.status(200).json({ image: imageUrl })
     }
 
-    // External URL: fetch and convert to base64 to avoid CORS issues in canvas
-    try {
-      const imgResp = await fetch(imageUrl)
-      const imgBuffer = await imgResp.arrayBuffer()
-      const contentType = imgResp.headers.get('content-type') || 'image/png'
-      const bytes = new Uint8Array(imgBuffer)
-      let binary = ''
-      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i])
-      const base64 = btoa(binary)
-      return new Response(JSON.stringify({ image: `data:${contentType};base64,${base64}` }), {
-        headers: { 'Content-Type': 'application/json' }
-      })
-    } catch {
-      // Fallback: return URL directly
-      return new Response(JSON.stringify({ image: imageUrl }), {
-        headers: { 'Content-Type': 'application/json' }
-      })
-    }
+    // Fetch the image and convert to base64 to avoid CORS issues in canvas
+    const imgResp = await fetch(imageUrl)
+    const imgBuffer = await imgResp.arrayBuffer()
+    const contentType = imgResp.headers.get('content-type') || 'image/png'
+    const bytes = new Uint8Array(imgBuffer)
+    let binary = ''
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i])
+    const base64 = btoa(binary)
+
+    return res.status(200).json({ image: `data:${contentType};base64,${base64}` })
 
   } catch (e) {
-    return new Response(JSON.stringify({ error: e.message }), {
-      status: 500, headers: { 'Content-Type': 'application/json' }
-    })
+    return res.status(500).json({ error: e.message })
   }
 }
