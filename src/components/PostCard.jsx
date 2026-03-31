@@ -160,11 +160,10 @@ const styles = {
   },
   canvasWrap: {
     background: '#F0F0F0',
-    aspectRatio: '1 / 1',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     position: 'relative', overflow: 'hidden',
   },
-  canvas: { width: '100%', height: '100%', objectFit: 'contain', display: 'block' },
+  canvas: { maxWidth: '100%', height: 'auto', display: 'block' },
   loadingBox: {
     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
   },
