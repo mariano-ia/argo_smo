@@ -8,32 +8,22 @@ export default async function handler(req) {
   const apiKey = process.env.OPENROUTER_API_KEY
   if (!apiKey) {
     return new Response(JSON.stringify({ error: 'Missing OPENROUTER_API_KEY' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      status: 500, headers: { 'Content-Type': 'application/json' }
     })
   }
 
   let body
-  try {
-    body = await req.json()
-  } catch {
-    return new Response(JSON.stringify({ error: 'Invalid JSON' }), { status: 400 })
-  }
+  try { body = await req.json() }
+  catch { return new Response(JSON.stringify({ error: 'Invalid JSON' }), { status: 400 }) }
 
   const { prompt, platform } = body
-  if (!prompt) {
-    return new Response(JSON.stringify({ error: 'Missing prompt' }), { status: 400 })
-  }
+  if (!prompt) return new Response(JSON.stringify({ error: 'Missing prompt' }), { status: 400 })
 
   const isLI = platform === 'linkedin'
-  const width = isLI ? 1200 : 1024
-  const height = isLI ? 628 : 1024
-
-  const fullPrompt = `${prompt}, high quality, sport photography, natural light, no text, no logos, no watermarks, ${isLI ? 'horizontal composition, wide shot' : 'square composition, dynamic angle'}`
+  const fullPrompt = `${prompt}, high quality, sport photography, natural light, no text, no logos, no watermarks, ${isLI ? 'horizontal landscape composition, wide shot' : 'square composition, dynamic angle'}, photorealistic`
 
   try {
-    // Using OpenRouter with black-forest-labs/flux-schnell for image generation
-    const response = await fetch('https://openrouter.ai/api/v1/images/generations', {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -42,37 +32,51 @@ export default async function handler(req) {
         'X-Title': 'Argo SMO'
       },
       body: JSON.stringify({
-        model: 'black-forest-labs/flux-schnell',
-        prompt: fullPrompt,
-        n: 1,
-        size: `${width}x${height}`,
+        model: 'google/gemini-2.5-flash-image',
+        messages: [{ role: 'user', content: fullPrompt }],
       })
     })
 
-    const data = await response.json()
+    const rawText = await response.text()
+    let data
+    try { data = JSON.parse(rawText) }
+    catch {
+      return new Response(JSON.stringify({ error: 'Parse error', raw: rawText.slice(0, 300) }), {
+        status: 500, headers: { 'Content-Type': 'application/json' }
+      })
+    }
 
     if (!response.ok) {
-      return new Response(JSON.stringify({ error: 'OpenRouter error', raw: data }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
+      return new Response(JSON.stringify({ error: 'OpenRouter error', status: response.status, raw: data }), {
+        status: 500, headers: { 'Content-Type': 'application/json' }
       })
     }
 
-    const imageUrl = data?.data?.[0]?.url
-    if (!imageUrl) {
-      return new Response(JSON.stringify({ error: 'No image returned', raw: data }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
+    // The model returns content as an array of parts
+    const content = data?.choices?.[0]?.message?.content
+    let imageData = null
+
+    if (Array.isArray(content)) {
+      // Look for image_url type part
+      const imgPart = content.find(c => c.type === 'image_url')
+      if (imgPart?.image_url?.url) {
+        imageData = imgPart.image_url.url
+      }
+    }
+
+    if (!imageData) {
+      return new Response(JSON.stringify({ error: 'No image in response', raw: JSON.stringify(data).slice(0, 500) }), {
+        status: 500, headers: { 'Content-Type': 'application/json' }
       })
     }
 
-    return new Response(JSON.stringify({ image: imageUrl }), {
+    return new Response(JSON.stringify({ image: imageData }), {
       headers: { 'Content-Type': 'application/json' }
     })
+
   } catch (e) {
     return new Response(JSON.stringify({ error: e.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      status: 500, headers: { 'Content-Type': 'application/json' }
     })
   }
 }
