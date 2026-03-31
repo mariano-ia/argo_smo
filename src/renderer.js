@@ -116,30 +116,40 @@ export function renderIgC(ctx, W, H, pilar, headline, img) {
 }
 
 export function renderLiA(ctx, W, H, pilar, headline, img) {
-  const imgW = 720
+  const imgW = 660
+  const panelX = imgW + 20
+  const panelW = W - panelX - 24
   ctx.fillStyle = C.dark; ctx.fillRect(0, 0, W, H)
   if (img) { ctx.save(); ctx.beginPath(); ctx.rect(0,0,imgW,H); ctx.clip(); drawBg(ctx, img, 0, 0, imgW, H); ctx.restore() }
   else { ctx.fillStyle = 'rgba(187,188,255,0.18)'; ctx.fillRect(0, 0, imgW, H) }
   const grad = ctx.createLinearGradient(imgW, 0, 0, 0)
-  grad.addColorStop(0, 'rgba(29,29,31,0)'); grad.addColorStop(1, 'rgba(29,29,31,0.9)')
+  grad.addColorStop(0, 'rgba(29,29,31,0)'); grad.addColorStop(1, 'rgba(29,29,31,0.85)')
   ctx.fillStyle = grad; ctx.fillRect(0, 0, imgW, H)
   ctx.fillStyle = C.dark; ctx.fillRect(imgW, 0, W - imgW, H)
   ctx.fillStyle = C.orange; ctx.fillRect(imgW, 0, W - imgW, 5)
-  ctx.font = '600 19px Inter, sans-serif'; ctx.fillStyle = C.purple
-  ctx.fillText('Argo Method', 758, 56)
-  ctx.font = '500 13px Inter, sans-serif'; ctx.fillStyle = C.orange
-  ctx.fillText(pilar.toUpperCase(), 758, 112)
-  ctx.font = 'bold 40px Inter, sans-serif'; ctx.fillStyle = C.white
-  wrapLines(ctx, headline, 758, 152, 400, 50)
-  ctx.font = '18px Inter, sans-serif'; ctx.fillStyle = C.gray
-  ctx.fillText('Argo identifica el arquetipo', 758, 318)
-  ctx.fillText('conductual en 12 minutos.', 758, 340)
-  ctx.fillStyle = C.purple; roundRect(ctx, 758, 516, 240, 44, 22); ctx.fill()
-  ctx.font = '500 17px Inter, sans-serif'; ctx.fillStyle = C.white
-  ctx.fillText('argomethod.com', 782, 542)
-  const q = headline.split('\\n')[0] || headline.split('\n')[0] || ''
-  ctx.font = 'bold 44px Inter, sans-serif'; ctx.fillStyle = C.white
-  wrapLines(ctx, `"${q}"`, 48, 260, 640, 56)
+  // Right panel: Argo label
+  ctx.font = '600 17px Inter, sans-serif'; ctx.fillStyle = C.purple
+  ctx.fillText('Argo Method', panelX, 48)
+  // Pilar
+  ctx.font = '700 11px Inter, sans-serif'; ctx.fillStyle = C.orange
+  ctx.letterSpacing = '1px'; ctx.fillText(pilar.toUpperCase(), panelX, 82); ctx.letterSpacing = '0px'
+  // Headline — max 3 lines at 32px, maxW = panelW
+  ctx.font = 'bold 32px Inter, sans-serif'; ctx.fillStyle = C.white
+  const endY = wrapLines(ctx, headline, panelX, 120, panelW, 42)
+  // Static descriptor — positioned after headline with gap
+  const descY = Math.max(endY + 20, 280)
+  ctx.font = '15px Inter, sans-serif'; ctx.fillStyle = C.gray
+  ctx.fillText('Argo identifica el arquetipo', panelX, descY)
+  ctx.fillText('conductual en 12 minutos.', panelX, descY + 22)
+  // CTA button
+  const btnY = Math.max(descY + 60, 380)
+  ctx.fillStyle = C.purple; roundRect(ctx, panelX, btnY, panelW, 40, 20); ctx.fill()
+  ctx.font = '500 15px Inter, sans-serif'; ctx.fillStyle = C.white
+  ctx.fillText('argomethod.com', panelX + 16, btnY + 26)
+  // Left overlay: big quote from first line of headline
+  const q = headline.replace(/\\n/g, ' ').replace(/\n/g, ' ').slice(0, 65)
+  ctx.font = 'bold 38px Inter, sans-serif'; ctx.fillStyle = C.white
+  wrapLines(ctx, `"${q}"`, 40, 220, imgW - 80, 50)
 }
 
 export function renderLiB(ctx, W, H, pilar, headline, img) {
