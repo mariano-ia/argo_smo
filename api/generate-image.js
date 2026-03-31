@@ -27,7 +27,7 @@ export default async function handler(req, res) {
         'X-Title': 'Argo SMO'
       },
       body: JSON.stringify({
-        model: 'black-forest-labs/flux.2-max',
+        model: 'black-forest-labs/flux.2-klein-4b',
         messages: [{ role: 'user', content: fullPrompt }],
         modalities: ['image'],
         image_config: { aspect_ratio: isLI ? '16:9' : '1:1' }
@@ -47,12 +47,10 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'No image returned', messageKeys: message ? Object.keys(message) : null, raw: JSON.stringify(data).slice(0, 600) })
     }
 
-    // If already base64, return directly
     if (imageUrl.startsWith('data:')) {
       return res.status(200).json({ image: imageUrl })
     }
 
-    // Fetch the image and convert to base64 to avoid CORS issues in canvas
     const imgResp = await fetch(imageUrl)
     const imgBuffer = await imgResp.arrayBuffer()
     const contentType = imgResp.headers.get('content-type') || 'image/png'
