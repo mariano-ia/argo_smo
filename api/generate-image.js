@@ -27,9 +27,9 @@ export default async function handler(req, res) {
         'X-Title': 'Argo SMO'
       },
       body: JSON.stringify({
-        model: 'black-forest-labs/flux.2-klein-4b',
+        model: 'google/gemini-2.5-flash-image',
         messages: [{ role: 'user', content: fullPrompt }],
-        modalities: ['image'],
+        modalities: ['image', 'text'],
         image_config: { aspect_ratio: isLI ? '16:9' : '1:1' }
       })
     })
