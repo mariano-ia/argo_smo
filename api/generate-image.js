@@ -71,9 +71,31 @@ export default async function handler(req) {
       })
     }
 
-    return new Response(JSON.stringify({ image: imageUrl }), {
-      headers: { 'Content-Type': 'application/json' }
-    })
+    // If already base64 data URL, return as-is
+    if (imageUrl.startsWith('data:')) {
+      return new Response(JSON.stringify({ image: imageUrl }), {
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+
+    // External URL: fetch and convert to base64 to avoid CORS issues in canvas
+    try {
+      const imgResp = await fetch(imageUrl)
+      const imgBuffer = await imgResp.arrayBuffer()
+      const contentType = imgResp.headers.get('content-type') || 'image/png'
+      const bytes = new Uint8Array(imgBuffer)
+      let binary = ''
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i])
+      const base64 = btoa(binary)
+      return new Response(JSON.stringify({ image: `data:${contentType};base64,${base64}` }), {
+        headers: { 'Content-Type': 'application/json' }
+      })
+    } catch {
+      // Fallback: return URL directly
+      return new Response(JSON.stringify({ image: imageUrl }), {
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
 
   } catch (e) {
     return new Response(JSON.stringify({ error: e.message }), {
