@@ -1,91 +1,58 @@
-// API para generar contenido a partir de una idea manual
 export const config = { maxDuration: 30 }
 
-const MANUAL_SYSTEM_PROMPT = `Sos el departamento de marketing de Argo Method. Recibirás una idea o tema para un post y generarás el contenido completo.
+const BRAND_CONTEXT = `
+## Argo Method — brand context
+Behavioral profiling system for young athletes aged 8–16. Combines DISC methodology, internal rhythm (Motor), and sport-environment alignment → 12 behavioral archetypes, 36 report variants.
+How it works: adult registers athlete → child plays 12-min interactive adventure → adult gets report with archetype + exact language to connect with that athlete.
+Audience: clubs, federations, academies, private schools. Decision makers: sports directors, coordinators, coaches.
+Voice: professional but human, short sentences, no fluff, first person plural.
+Content pillars: 1) Science & Method, 2) Sport Education, 3) Product.
+`
 
-## Qué es Argo Method
-Sistema de perfilamiento conductual para jóvenes deportistas de 8 a 16 años. Combina metodología DISC, ritmo interno (Motor) y alineación con el entorno deportivo para generar 12 arquetipos con 36 variantes de informe.
-El niño juega La Odisea del Argo (12 min). El adulto recibe el informe con el arquetipo y el lenguaje exacto para conectar con ese deportista.
-Público: clubes, federaciones, academias, colegios. Decisores: directores deportivos, coordinadores, entrenadores.
+const SYSTEM_PROMPT = `You are Argo Method's autonomous marketing department. You receive a content idea and generate complete posts for Instagram, LinkedIn, and a LinkedIn carousel.
 
-## Tono de voz
-Profesional pero humano. Frases cortas. Sin marketing vacío. Primera persona del plural.
+${BRAND_CONTEXT}
 
-## Límites ESTRICTOS
-- Pilar: máx 22 chars EN MAYUSCULAS
-- Headline Instagram (máx 3 líneas): máx 80 chars totales, separar con \\n
-- Copy Instagram: máx 300 chars
-- Hashtags Instagram: 8-10 hashtags
-- Headline LinkedIn (máx 3 líneas): máx 65 chars totales, separar con \\n
-- Copy LinkedIn: máx 900 chars
-- Hashtags LinkedIn: 3-5 hashtags
-- Carrusel: 5 slides (portada + 3 contenido + cierre). Cada slide tiene titulo (máx 60 chars) y body (máx 180 chars)
+## Output language
+ALL content (copy, headlines, hashtags, carousel text) must be in ENGLISH.
 
-## Respuesta
-Respondé SOLO con este JSON exacto (sin markdown, sin backticks, sin explicaciones):
-{
-  "instagram": {
-    "pilar": "ETIQUETA MAYUSCULAS",
-    "headline": "frase\\nimpactante",
-    "copy": "copy listo para publicar",
-    "hashtags": "#hash1 #hash2 ...",
-    "imagePrompt": "photorealistic scene of young athletes aged 8 to 16 years old training, natural light, no text, no logos, cinematic sport photography, square composition",
-    "template": "igA"
-  },
-  "linkedin": {
-    "pilar": "ETIQUETA MAYUSCULAS",
-    "headline": "frase\\nimpactante",
-    "copy": "copy con más desarrollo",
-    "hashtags": "#hash1 #hash2 #hash3",
-    "imagePrompt": "photorealistic scene of a coach working with young athletes aged 8 to 16 years old, natural light, no text, no logos, professional sport photography, horizontal",
-    "template": "liA",
-    "carousel": {
-      "slide01": { "headline": "titular portada impactante", "pilar": "ETIQUETA" },
-      "slide02": { "titulo": "Titulo slide 2", "body": "Contenido de la slide 2, desarrollado y claro." },
-      "slide03": { "titulo": "Titulo slide 3", "body": "Contenido de la slide 3." },
-      "slide04": { "titulo": "Titulo slide 4", "body": "Contenido de la slide 4." },
-      "slide05": { "headline": "Frase de cierre poderosa", "subline": "Probalo 14 días gratis. Sin tarjeta de crédito." }
-    }
-  }
-}`
+## Strict character limits
+- Pilar label: max 22 chars, ALL CAPS
+- Instagram headline: max 80 chars, split lines with \\n
+- Instagram copy: max 300 chars, 8–10 hashtags
+- LinkedIn headline: max 65 chars, split lines with \\n
+- LinkedIn copy: max 900 chars, 3–5 hashtags
+- Carousel: 5 slides. Slide title max 60 chars. Body max 180 chars.
+
+## Image prompt rules
+- ONE sport only, specific realistic scenario
+- Documentary/editorial style — looks like a real candid photo, not stock
+- Natural or available light
+- Aged 8 to 16 years old, no text, no logos
+- Describe the exact scenario (e.g. "youth soccer player receiving tactical instructions from coach at sideline")
+
+Respond ONLY with this exact JSON (no markdown, no backticks):
+{ "instagram": { "pilar":"", "headline":"", "copy":"", "hashtags":"", "imagePrompt":"specific scene, aged 8 to 16, ONE sport, documentary style, natural light, no text, no logos", "template":"igA" }, "linkedin": { "pilar":"", "headline":"", "copy":"", "hashtags":"", "imagePrompt":"specific scene, aged 8 to 16, ONE sport, coach and athlete, documentary style, natural light, no text, no logos", "template":"liA", "carousel": { "slide01":{"headline":"","pilar":""}, "slide02":{"titulo":"","body":""}, "slide03":{"titulo":"","body":""}, "slide04":{"titulo":"","body":""}, "slide05":{"headline":"","subline":"Try it free for 14 days. No credit card required."} } } }`
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
-
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return res.status(500).json({ error: 'Missing ANTHROPIC_API_KEY' })
-
   const { idea } = req.body || {}
   if (!idea) return res.status(400).json({ error: 'Missing idea' })
-
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
-        max_tokens: 2000,
-        system: MANUAL_SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: `Idea para el post: ${idea}` }]
-      })
+      headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 2000, system: SYSTEM_PROMPT, messages: [{ role: 'user', content: `Content idea: ${idea}` }] })
     })
-
-    const data = await response.json()
-    const text = data.content?.[0]?.text || ''
-
-    let parsed
+    const d = await r.json()
+    const text = d.content?.[0]?.text || ''
     try {
-      const clean = text.replace(/```json|```/g, '').trim()
-      parsed = JSON.parse(clean)
+      return res.status(200).json(JSON.parse(text.replace(/```json|```/g, '').trim()))
     } catch {
       return res.status(500).json({ error: 'Parse error', raw: text })
     }
-
-    return res.status(200).json(parsed)
   } catch (e) {
     return res.status(500).json({ error: e.message })
   }
