@@ -54,6 +54,7 @@ export default function App() {
     setIgData(null); setLiData(null); setIgImage(null); setLiImage(null)
 
     try {
+      // Step 1: Generate content
       let content
       if (mode === 'manual') {
         const res = await fetch('/api/generate-manual', {
@@ -80,6 +81,7 @@ export default function App() {
       await addToHistory(content.instagram, content.linkedin)
       await saveUsageEvent('content', 800)
 
+      // Step 2: Generate images
       setPhase('generating-images')
       setStatusMsg('Nano Banana generando imágenes...')
 
@@ -165,11 +167,12 @@ export default function App() {
             {phase === 'error' && 'Algo salió mal'}
           </div>
 
+          {/* Manual idea input */}
           {mode === 'manual' && phase === 'idle' && (
             <div style={styles.ideaWrapper}>
               <textarea
                 style={styles.ideaInput}
-                placeholder="Ej: quiero hablar sobre cómo los niños con perfil D reaccionan diferente a la presión de la competencia..."
+                placeholder="Ej: quiero hablar sobre cómo los niños con perfil D reaccionan diferente a la presión en la competencia..."
                 value={idea}
                 onChange={e => setIdea(e.target.value)}
                 rows={3}
@@ -188,7 +191,7 @@ export default function App() {
             disabled={isLoading || !canGenerate}
           >
             {isLoading ? (
-              <><soan style={styles.spinner} /> {phase === 'generating-content' ? 'Generando contenido...' : 'Generando imágenes...'}</>
+              <><span style={styles.spinner} /> {phase === 'generating-content' ? 'Generando contenido...' : 'Generando imágenes...'}</>
             ) : (
               phase === 'done' ? 'Generar de nuevo' : 'Generar contenido'
             )}
@@ -196,7 +199,7 @@ export default function App() {
 
           {history.length > 0 && phase === 'idle' && mode === 'auto' && (
             <div style={styles.historyHint}>
-              Claude va a analizar tus últimos {Math.min(h<istory.length, 12)} posts para decidir qué publicar hoy.
+              Claude va a analizar tus últimos {Math.min(history.length, 12)} posts para decidir qué publicar hoy.
             </div>
           )}
         </div>

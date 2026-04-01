@@ -26,6 +26,7 @@ export default function CarouselCard({ data, bgImage, loading }) {
     const carousel = data.carousel || {}
 
     if (activeSlide === 'carr01') {
+      // Portada: imagen de fondo + pilar + headline
       const slide = carousel.slide01 || {}
       if (bgImage) {
         const image = new Image()
@@ -94,6 +95,7 @@ export default function CarouselCard({ data, bgImage, loading }) {
           <span style={styles.label}>LinkedIn · Carrusel</span>
           {data && <span style={styles.pilarBadge}>{data.pilar}</span>}
         </div>
+        {/* Slide tabs */}
         {data && (
           <div style={styles.tabs}>
             {slides.map(s => (
