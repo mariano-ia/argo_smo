@@ -325,19 +325,18 @@ export function renderTemplate(ctx, template, pilar, headline, img, extra) {
 // ── INSTAGRAM STORIES 1080x1920 ─────────────────────────────────────────────
 
 export function renderStoryA(ctx, W, H, pilar, headline, img) {
-  // Full bleed image + dark overlay bottom half
   ctx.fillStyle = '#1D1D1F'; ctx.fillRect(0, 0, W, H)
   if (img) {
     ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.clip()
     drawBg(ctx, img, 0, 0, W, H); ctx.restore()
   }
-  // Gradient overlay — starts at 40% from top
+  // Gradient overlay covers bottom 55%
   const grad = ctx.createLinearGradient(0, H * 0.38, 0, H)
   grad.addColorStop(0, 'rgba(29,29,31,0)')
-  grad.addColorStop(0.6, 'rgba(29,29,31,0.85)')
+  grad.addColorStop(0.5, 'rgba(29,29,31,0.82)')
   grad.addColorStop(1, 'rgba(29,29,31,0.97)')
   ctx.fillStyle = grad; ctx.fillRect(0, H * 0.38, W, H * 0.62)
-  // Top purple bar + bottom orange bar
+  // Bars
   ctx.fillStyle = C.purple; ctx.fillRect(0, 0, W, 8)
   ctx.fillStyle = C.orange; ctx.fillRect(0, H - 8, W, 8)
   // Logo pill
@@ -345,25 +344,24 @@ export function renderStoryA(ctx, W, H, pilar, headline, img) {
   roundRect(ctx, 64, 88, 264, 60, 30); ctx.fill()
   ctx.font = '600 27px Inter, sans-serif'; ctx.fillStyle = C.white
   ctx.fillText('Argo Method', 96, 128)
-  // Pilar chip — positioned in lower third
-  drawPilarChip(ctx, pilar, 64, 1340)
-  // Headline — large, max 4 lines
-  ctx.font = 'bold 88px Inter, sans-serif'; ctx.fillStyle = C.white
-  wrapLines(ctx, headline, 64, 1420, W - 100, 104)
-  // Footer
-  ctx.fillStyle = C.purple; ctx.fillRect(0, H - 96, W, 96)
+  // Footer fixed at bottom — 104px tall
+  const footerY = H - 104
+  ctx.fillStyle = C.purple; ctx.fillRect(0, footerY, W, 104)
   ctx.font = '500 28px Inter, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.65)'
-  ctx.fillText('argomethod.com', 64, H - 34)
-  ctx.fillStyle = C.orange; ctx.beginPath(); ctx.arc(W - 80, H - 54, 14, 0, Math.PI * 2); ctx.fill()
+  ctx.fillText('argomethod.com', 64, footerY + 62)
+  ctx.fillStyle = C.orange; ctx.beginPath(); ctx.arc(W - 80, footerY + 52, 14, 0, Math.PI * 2); ctx.fill()
+  // Chip at y=1220, headline at y=1300 — max 4 lines at 72px = 288px, ends at ~1588, safe from footer at 1816
+  drawPilarChip(ctx, pilar, 64, 1220)
+  ctx.font = 'bold 72px Inter, sans-serif'; ctx.fillStyle = C.white
+  wrapLines(ctx, headline, 64, 1300, W - 100, 86)
 }
 
 export function renderStoryB(ctx, W, H, pilar, headline) {
-  // Solid purple background
   ctx.fillStyle = C.purple; ctx.fillRect(0, 0, W, H)
-  // Decorative circles
+  // Decorative circles — pushed up so they don't overlap content area
   ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.beginPath(); ctx.arc(880, -150, 420, 0, Math.PI * 2); ctx.fill()
-  ctx.fillStyle = 'rgba(249,115,22,0.18)'; ctx.beginPath(); ctx.arc(-80, 1650, 300, 0, Math.PI * 2); ctx.fill()
-  // Top orange + bottom orange bars
+  ctx.fillStyle = 'rgba(249,115,22,0.15)'; ctx.beginPath(); ctx.arc(-80, 900, 260, 0, Math.PI * 2); ctx.fill()
+  // Bars
   ctx.fillStyle = C.orange; ctx.fillRect(0, 0, W, 8)
   ctx.fillStyle = C.orange; ctx.fillRect(0, H - 8, W, 8)
   // Logo pill
@@ -371,17 +369,17 @@ export function renderStoryB(ctx, W, H, pilar, headline) {
   roundRect(ctx, 64, 88, 264, 60, 30); ctx.fill()
   ctx.font = '600 27px Inter, sans-serif'; ctx.fillStyle = C.white
   ctx.fillText('Argo Method', 96, 128)
-  // Big decorative number ghost
+  // Decorative number — in middle zone, won't overlap text
   ctx.font = 'bold 680px Inter, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.05)'
-  ctx.fillText('12', -60, 1200)
-  // Pilar chip
-  drawPilarChip(ctx, pilar, 64, 1380)
-  // Headline
-  ctx.font = 'bold 88px Inter, sans-serif'; ctx.fillStyle = C.white
-  wrapLines(ctx, headline, 64, 1460, W - 100, 104)
-  // Footer
-  ctx.fillStyle = 'rgba(29,29,31,0.4)'; ctx.fillRect(0, H - 96, W, 96)
+  ctx.fillText('12', -60, 1100)
+  // Footer fixed
+  const footerY = H - 104
+  ctx.fillStyle = 'rgba(29,29,31,0.4)'; ctx.fillRect(0, footerY, W, 104)
   ctx.font = '500 28px Inter, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.65)'
-  ctx.fillText('argomethod.com', 64, H - 34)
-  ctx.fillStyle = C.orange; ctx.beginPath(); ctx.arc(W - 80, H - 54, 14, 0, Math.PI * 2); ctx.fill()
+  ctx.fillText('argomethod.com', 64, footerY + 62)
+  ctx.fillStyle = C.orange; ctx.beginPath(); ctx.arc(W - 80, footerY + 52, 14, 0, Math.PI * 2); ctx.fill()
+  // Chip and headline — same safe zone as storyA
+  drawPilarChip(ctx, pilar, 64, 1220)
+  ctx.font = 'bold 72px Inter, sans-serif'; ctx.fillStyle = C.white
+  wrapLines(ctx, headline, 64, 1300, W - 100, 86)
 }
