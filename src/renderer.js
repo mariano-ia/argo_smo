@@ -90,18 +90,20 @@ function wrapLines(ctx, text, x, y, maxW, lineH) {
 export function renderIgA(ctx, W, H, pilar, headline, img) {
   ctx.fillStyle = C.light; ctx.fillRect(0, 0, W, H)
   if (img) { ctx.save(); ctx.beginPath(); ctx.rect(0,0,W,H); ctx.clip(); drawBg(ctx, img, 0, 0, W, H); ctx.restore() }
-  const grad = ctx.createLinearGradient(0, H * 0.38, 0, H)
+  const grad = ctx.createLinearGradient(0, H * 0.35, 0, H)
   grad.addColorStop(0, 'rgba(29,29,31,0)')
   grad.addColorStop(1, 'rgba(29,29,31,0.96)')
-  ctx.fillStyle = grad; ctx.fillRect(0, H * 0.38, W, H * 0.62)
+  ctx.fillStyle = grad; ctx.fillRect(0, H * 0.35, W, H * 0.65)
   ctx.fillStyle = C.purple; ctx.fillRect(0, 0, W, 8)
   ctx.fillStyle = 'rgba(149,95,181,0.15)'
   roundRect(ctx, 56, 48, 224, 48, 24); ctx.fill()
   ctx.font = '600 22px Inter, sans-serif'; ctx.fillStyle = C.purple
   ctx.fillText('Argo Method', 76, 80)
-  drawPilarChip(ctx, pilar, 56, 800)
-  ctx.font = 'bold 58px Inter, sans-serif'; ctx.fillStyle = C.white
-  wrapLines(ctx, headline, 56, 860, W - 80, 70)
+  // Chip at y=780, headline starts at y=836
+  drawPilarChip(ctx, pilar, 56, 780)
+  ctx.font = 'bold 54px Inter, sans-serif'; ctx.fillStyle = C.white
+  wrapLines(ctx, headline, 56, 836, W - 80, 66)
+  // Footer always at bottom 72px strip
   ctx.fillStyle = C.purple; ctx.fillRect(0, 1008, W, 72)
   ctx.font = '500 22px Inter, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.65)'
   ctx.fillText('argomethod.com', 56, 1050)
@@ -131,18 +133,23 @@ export function renderIgC(ctx, W, H, pilar, headline, img) {
   ctx.fillStyle = C.purple; ctx.fillRect(0, 0, W, 12)
   ctx.font = '600 21px Inter, sans-serif'; ctx.fillStyle = C.purple
   ctx.fillText('Argo Method', 56, 80)
+  // Image: fixed height 460px to leave more room below
   if (img) {
-    ctx.save(); roundRect(ctx, 56, 130, W - 112, 540, 16); ctx.clip()
-    drawBg(ctx, img, 56, 130, W - 112, 540); ctx.restore()
+    ctx.save(); roundRect(ctx, 56, 110, W - 112, 460, 16); ctx.clip()
+    drawBg(ctx, img, 56, 110, W - 112, 460); ctx.restore()
   } else {
-    ctx.fillStyle = 'rgba(187,188,255,0.4)'; roundRect(ctx, 56, 130, W - 112, 540, 16); ctx.fill()
+    ctx.fillStyle = 'rgba(187,188,255,0.4)'; roundRect(ctx, 56, 110, W - 112, 460, 16); ctx.fill()
   }
-  drawPilarChipSm(ctx, pilar, 56, 724)
-  ctx.font = 'bold 58px Inter, sans-serif'; ctx.fillStyle = C.dark
-  wrapLines(ctx, headline, 56, 776, W - 80, 70)
-  ctx.fillStyle = C.orange; ctx.fillRect(56, 972, 80, 4)
+  // Chip: 32px below image bottom (110+460+32 = 602)
+  drawPilarChipSm(ctx, pilar, 56, 602)
+  // Headline: 52px below chip baseline (602+52 = 654), font 52px, lineH 64
+  ctx.font = 'bold 52px Inter, sans-serif'; ctx.fillStyle = C.dark
+  const endY = wrapLines(ctx, headline, 56, 654, W - 80, 64)
+  // Footer: fixed at bottom — orange bar + URL with safe padding from endY
+  const footerY = Math.max(endY + 40, 960)
+  ctx.fillStyle = C.orange; ctx.fillRect(56, footerY, 80, 4)
   ctx.font = '500 20px Inter, sans-serif'; ctx.fillStyle = C.gray
-  ctx.fillText('argomethod.com', 152, 996)
+  ctx.fillText('argomethod.com', 152, footerY + 28)
 }
 
 export function renderLiA(ctx, W, H, pilar, headline, img) {
