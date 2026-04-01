@@ -16,9 +16,7 @@ export default function App() {
   const [history, setHistory] = useState([])
   const [showHistory, setShowHistory] = useState(false)
   const [error, setError] = useState(null)
-
-  // Manual idea state
-  const [mode, setMode] = useState('auto') // 'auto' | 'manual'
+  const [mode, setMode] = useState('auto')
   const [idea, setIdea] = useState('')
 
   useEffect(() => {
@@ -30,7 +28,7 @@ export default function App() {
   }, [])
 
   const addToHistory = async (ig, li) => {
-    const today = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    const today = new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })
     const newPosts = [
       { date: today, platform: 'instagram', pilar: ig.pilar, headline: ig.headline, template: ig.template },
       { date: today, platform: 'linkedin', pilar: li.pilar, headline: li.headline, template: li.template },
@@ -43,34 +41,27 @@ export default function App() {
     setHistory(updated)
     const currentIds = updated.map(p => p.id)
     const removedIds = history.filter(p => !currentIds.includes(p.id)).map(p => p.id)
-    if (removedIds.length > 0) {
-      await supabase.from('posts_history').delete().in('id', removedIds)
-    }
+    if (removedIds.length > 0) await supabase.from('posts_history').delete().in('id', removedIds)
   }
 
   const generate = async () => {
     setPhase('generating-content')
-    setStatusMsg(mode === 'manual' ? 'Claude está procesando tu idea...' : 'Claude está decidiendo el contenido del día...')
+    setStatusMsg(mode === 'manual' ? 'Claude is processing your idea...' : 'Claude is deciding today\'s content...')
     setError(null)
     setIgData(null); setLiData(null); setIgImage(null); setLiImage(null)
 
     try {
-      // Step 1: Generate content
       let content
       if (mode === 'manual') {
         const res = await fetch('/api/generate-manual', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ idea })
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idea })
         })
         if (!res.ok) throw new Error(`Error: ${res.status}`)
         content = await res.json()
         if (content.error) throw new Error(content.error)
       } else {
         const res = await fetch('/api/generate-content', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ recentPosts: history.slice(-12) })
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ recentPosts: history.slice(-12) })
         })
         if (!res.ok) throw new Error(`Error: ${res.status}`)
         content = await res.json()
@@ -82,35 +73,24 @@ export default function App() {
       await addToHistory(content.instagram, content.linkedin)
       await saveUsageEvent('content', 800)
 
-      // Step 2: Generate images
       setPhase('generating-images')
-      setStatusMsg('Nano Banana generando imágenes...')
+      setStatusMsg('Nano Banana generating images...')
 
       const [igImg, liImg] = await Promise.all([
-        fetch('/api/generate-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: content.instagram.imagePrompt, platform: 'instagram' })
-        }).then(r => r.json()).then(d => d.image || null).catch(() => null),
-
-        fetch('/api/generate-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: content.linkedin.imagePrompt, platform: 'linkedin' })
-        }).then(r => r.json()).then(d => d.image || null).catch(() => null),
+        fetch('/api/generate-image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: content.instagram.imagePrompt, platform: 'instagram' }) })
+          .then(r => r.json()).then(d => d.image || null).catch(() => null),
+        fetch('/api/generate-image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: content.linkedin.imagePrompt, platform: 'linkedin' }) })
+          .then(r => r.json()).then(d => d.image || null).catch(() => null),
       ])
 
       if (igImg) await saveUsageEvent('image', 500)
       if (liImg) await saveUsageEvent('image', 500)
 
-      setIgImage(igImg)
-      setLiImage(liImg)
+      setIgImage(igImg); setLiImage(liImg)
       setPhase('done')
-      setStatusMsg('Piezas listas. Revisá, descargá y publicá.')
+      setStatusMsg('Ready. Review, download and publish.')
     } catch (e) {
-      setError(e.message)
-      setPhase('error')
-      setStatusMsg('')
+      setError(e.message); setPhase('error'); setStatusMsg('')
     }
   }
 
@@ -130,7 +110,7 @@ export default function App() {
           <div style={styles.headerRight}>
             <UsagePanel />
             <button style={styles.historyBtn} onClick={() => setShowHistory(!showHistory)}>
-              {showHistory ? 'Ocultar historial' : `Historial (${history.length})`}
+              {showHistory ? 'Hide history' : `History (${history.length})`}
             </button>
           </div>
         </div>
@@ -139,47 +119,39 @@ export default function App() {
       <main style={styles.main}>
         {showHistory && (
           <div style={styles.historySection}>
-            <div style={styles.sectionTitle}>Historial de publicaciones</div>
+            <div style={styles.sectionTitle}>Post history</div>
             <HistoryPanel history={history} onUpdate={updateHistory} />
           </div>
         )}
 
         <div style={styles.hero}>
-          {/* Mode selector */}
           <div style={styles.modeTabs}>
-            <button
-              style={{ ...styles.modeTab, ...(mode === 'auto' ? styles.modeTabActive : {}) }}
-              onClick={() => setMode('auto')}
-            >
-              ✦ Automático
+            <button style={{ ...styles.modeTab, ...(mode === 'auto' ? styles.modeTabActive : {}) }} onClick={() => setMode('auto')}>
+              ✦ Automatic
             </button>
-            <button
-              style={{ ...styles.modeTab, ...(mode === 'manual' ? styles.modeTabActive : {}) }}
-              onClick={() => setMode('manual')}
-            >
-              ✏️ Con mi idea
+            <button style={{ ...styles.modeTab, ...(mode === 'manual' ? styles.modeTabActive : {}) }} onClick={() => setMode('manual')}>
+              ✏️ My idea
             </button>
           </div>
 
           <div style={styles.heroText}>
-            {phase === 'idle' && (mode === 'auto' ? 'Generá el contenido de hoy para Argo' : 'Escribí tu idea y generamos el contenido')}
+            {phase === 'idle' && (mode === 'auto' ? "Generate today's content for Argo" : 'Describe your idea and we generate the content')}
             {isLoading && statusMsg}
             {phase === 'done' && statusMsg}
-            {phase === 'error' && 'Algo salió mal'}
+            {phase === 'error' && 'Something went wrong'}
           </div>
 
-          {/* Manual idea input */}
           {mode === 'manual' && phase === 'idle' && (
             <div style={styles.ideaWrapper}>
               <textarea
                 style={styles.ideaInput}
-                placeholder="Ej: quiero hablar sobre cómo los niños con perfil D reaccionan diferente a la presión en la competencia..."
+                placeholder="E.g. I want to talk about how kids with a D profile react differently to competition pressure..."
                 value={idea}
                 onChange={e => setIdea(e.target.value)}
                 rows={3}
               />
               <div style={styles.ideaHint}>
-                {idea.length < 10 ? 'Describí la idea con un poco más de detalle' : `${idea.length} chars — listo para generar`}
+                {idea.length < 10 ? 'Describe the idea with a bit more detail' : `${idea.length} chars — ready to generate`}
               </div>
             </div>
           )}
@@ -192,44 +164,28 @@ export default function App() {
             disabled={isLoading || !canGenerate}
           >
             {isLoading ? (
-              <><span style={styles.spinner} /> {phase === 'generating-content' ? 'Generando contenido...' : 'Generando imágenes...'}</>
+              <><span style={styles.spinner} /> {phase === 'generating-content' ? 'Generating content...' : 'Generating images...'}</>
             ) : (
-              phase === 'done' ? 'Generar de nuevo' : 'Generar contenido'
+              phase === 'done' ? 'Generate again' : 'Generate content'
             )}
           </button>
 
           {history.length > 0 && phase === 'idle' && mode === 'auto' && (
             <div style={styles.historyHint}>
-              Claude va a analizar tus últimos {Math.min(history.length, 12)} posts para decidir qué publicar hoy.
+              Claude will analyze your last {Math.min(history.length, 12)} posts to decide what to publish today.
             </div>
           )}
         </div>
 
         {(igData || liData || isLoading) && (
           <div style={styles.grid}>
-            <PostCard
-              platform="instagram"
-              data={igData}
-              bgImage={igImage}
-              loading={isGeneratingImages && igData && !igImage}
-            />
-            <StoryCard
-              data={igData}
-              bgImage={igImage}
-              loading={isGeneratingImages && igData && !igImage}
-            />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-              <PostCard
-                platform="linkedin"
-                data={liData}
-                bgImage={liImage}
-                loading={isGeneratingImages && liData && !liImage}
-              />
-              <CarouselCard
-                data={liData}
-                bgImage={liImage}
-                loading={isGeneratingImages && liData && !liImage}
-              />
+              <PostCard platform="instagram" data={igData} bgImage={igImage} loading={isGeneratingImages && igData && !igImage} />
+              <StoryCard data={igData} bgImage={igImage} loading={isGeneratingImages && igData && !igImage} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              <PostCard platform="linkedin" data={liData} bgImage={liImage} loading={isGeneratingImages && liData && !liImage} />
+              <CarouselCard data={liData} bgImage={liImage} loading={isGeneratingImages && liData && !liImage} />
             </div>
           </div>
         )}

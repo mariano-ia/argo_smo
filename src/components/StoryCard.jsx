@@ -49,7 +49,7 @@ export default function StoryCard({ data, bgImage, loading }) {
 
       <div style={S.canvasWrap}>
         {loading ? (
-          <div style={S.loadingBox}><div style={S.spinner} /><span style={{ fontSize: 13, color: '#86868B' }}>Generando story...</span></div>
+          <div style={S.loadingBox}><div style={S.spinner} /><span style={{ fontSize: 13, color: '#86868B' }}>Generating story...</span></div>
         ) : data ? (
           <canvas ref={canvasRef} style={{ maxWidth: '100%', height: 'auto', display: 'block' }} />
         ) : (
@@ -63,10 +63,10 @@ export default function StoryCard({ data, bgImage, loading }) {
             <div style={S.labelSm}>Headline</div>
             <div style={{ fontSize: 13, lineHeight: 1.5, color: '#1D1D1F', whiteSpace: 'pre-wrap' }}>{data.headline?.replace(/\\n/g, '\n')}</div>
             <button style={S.copyBtn} onClick={() => { navigator.clipboard.writeText(data.headline?.replace(/\\n/g, '\n')); setCopied(true); setTimeout(() => setCopied(false), 2000) }}>
-              {copied ? '✓ Copiado' : 'Copiar texto'}
+              {copied ? '✓ Copied' : 'Copy text'}
             </button>
           </div>
-          <button style={S.dlBtn} onClick={download}>↓ Descargar Story PNG</button>
+          <button style={S.dlBtn} onClick={download}>↓ Download Story PNG</button>
         </div>
       )}
     </div>

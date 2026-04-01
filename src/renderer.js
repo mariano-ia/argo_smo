@@ -175,8 +175,8 @@ export function renderLiA(ctx, W, H, pilar, headline, img) {
   // Static descriptor — positioned after headline with gap
   const descY = Math.max(endY + 20, 280)
   ctx.font = '15px Inter, sans-serif'; ctx.fillStyle = C.gray
-  ctx.fillText('Argo identifica el arquetipo', panelX, descY)
-  ctx.fillText('conductual en 12 minutos.', panelX, descY + 22)
+  ctx.fillText('Argo identifies the behavioral', panelX, descY)
+  ctx.fillText('archetype in 12 minutes.', panelX, descY + 22)
   // CTA button
   const btnY = Math.max(descY + 60, 380)
   ctx.fillStyle = C.purple; roundRect(ctx, panelX, btnY, panelW, 40, 20); ctx.fill()
@@ -214,14 +214,14 @@ export function renderLiC(ctx, W, H, pilar, headline) {
   ctx.font = 'bold 62px Inter, sans-serif'; ctx.fillStyle = C.white
   wrapLines(ctx, `"${headline}"`, 80, 120, 1100, 76)
   ctx.font = '500 18px Inter, sans-serif'; ctx.fillStyle = C.gray
-  ctx.fillText('— Argo Method, perfilamiento conductual', 80, 530)
+  ctx.fillText('— Argo Method, behavioral profiling', 80, 530)
   ctx.font = '500 15px Inter, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.4)'
   ctx.fillText('argomethod.com', 980, 600)
 }
 
 // ── CARRUSEL LINKEDIN ────────────────────────────────────────────
 
-// Slide 01 — Portada (oscuro, imagen de fondo)
+// Slide 01 — Cover (dark, background image)
 export function renderCarr01(ctx, W, H, pilar, headline, img) {
   ctx.fillStyle = '#2A2A35'; ctx.fillRect(0, 0, W, H)
   if (img) { ctx.save(); ctx.beginPath(); ctx.rect(0,0,W,H); ctx.clip(); drawBg(ctx, img, 0, 0, W, H); ctx.restore() }
@@ -274,7 +274,7 @@ export function renderCarrContent(ctx, W, H, slideNum, titulo, body) {
   wrapLines(ctx, body, 56, 530, W - 80, 44)
 }
 
-// Slide 05 — Cierre CTA (violeta)
+// Slide 05 — Closing CTA (purple)
 export function renderCarr05(ctx, W, H, headline, subline) {
   ctx.fillStyle = C.purple; ctx.fillRect(0, 0, W, H)
   // Círculos decorativos
@@ -292,11 +292,11 @@ export function renderCarr05(ctx, W, H, headline, subline) {
   wrapLines(ctx, headline, 56, 280, W - 80, 86)
   // Subline
   ctx.font = '400 26px Inter, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.75)'
-  ctx.fillText(subline || '14 días gratis. Sin tarjeta de crédito.', 56, 570)
+  ctx.fillText(subline || '14 days free. No credit card required.', 56, 570)
   // Botón CTA blanco
   ctx.fillStyle = C.white; roundRect(ctx, 56, 620, 360, 68, 34); ctx.fill()
   ctx.font = '700 24px Inter, sans-serif'; ctx.fillStyle = C.purple
-  ctx.fillText('Iniciar prueba gratuita', 86, 662)
+  ctx.fillText('Start free trial', 86, 662)
 }
 
 export function getTemplateDimensions(template) {

@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { renderTemplate, getTemplateDimensions } from '../renderer.js'
 
 const SLIDE_LABELS = {
-  carr01: 'Portada',
+  carr01: 'Cover',
   carr02: 'Slide 2',
   carr03: 'Slide 3',
   carr04: 'Slide 4',
-  carr05: 'Cierre',
+  carr05: 'Closing',
 }
 
 export default function CarouselCard({ data, bgImage, loading }) {
@@ -26,7 +26,7 @@ export default function CarouselCard({ data, bgImage, loading }) {
     const carousel = data.carousel || {}
 
     if (activeSlide === 'carr01') {
-      // Portada: imagen de fondo + pilar + headline
+      // Cover: background image + pilar + headline
       const slide = carousel.slide01 || {}
       if (bgImage) {
         const image = new Image()
@@ -92,7 +92,7 @@ export default function CarouselCard({ data, bgImage, loading }) {
       <div style={styles.header}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#0A66C2' }} />
-          <span style={styles.label}>LinkedIn · Carrusel</span>
+          <span style={styles.label}>LinkedIn · Carousel</span>
           {data && <span style={styles.pilarBadge}>{data.pilar}</span>}
         </div>
         {/* Slide tabs */}
@@ -116,7 +116,7 @@ export default function CarouselCard({ data, bgImage, loading }) {
         {loading ? (
           <div style={styles.loadingBox}>
             <div style={styles.spinner} />
-            <span style={styles.loadingText}>Generando carrusel...</span>
+            <span style={styles.loadingText}>Generating carousel...</span>
           </div>
         ) : data ? (
           <canvas ref={canvasRef} style={styles.canvas} />
@@ -135,7 +135,7 @@ export default function CarouselCard({ data, bgImage, loading }) {
             <div style={styles.copyLabel}>{SLIDE_LABELS[activeSlide]}</div>
             <div style={{ ...styles.copyText, maxHeight: 120, overflowY: 'auto' }}>{getSlideText()}</div>
             <button style={styles.copyBtn} onClick={() => copyText(getSlideText())}>
-              {copied ? '✓ Copiado' : 'Copiar texto'}
+              {copied ? '✓ Copied' : 'Copy text'}
             </button>
           </div>
 
@@ -144,16 +144,16 @@ export default function CarouselCard({ data, bgImage, loading }) {
             <div style={{ ...styles.copyText, maxHeight: 100, overflowY: 'auto' }}>{data.copy}</div>
             <div style={styles.hashtags}>{data.hashtags}</div>
             <button style={styles.copyBtn} onClick={() => copyText(data.copy + '\n\n' + data.hashtags)}>
-              Copiar copy + hashtags
+              Copy + hashtags
             </button>
           </div>
 
           <div style={{ display: 'flex', gap: 8 }}>
             <button style={styles.downloadBtn} onClick={download}>
-              ↓ Slide actual
+              ↓ Current slide
             </button>
             <button style={{ ...styles.downloadBtn, background: '#1D1D1F' }} onClick={downloadAll}>
-              ↓ Todas las slides
+              ↓ All slides
             </button>
           </div>
         </div>
