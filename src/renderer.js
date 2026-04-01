@@ -99,10 +99,10 @@ export function renderIgA(ctx, W, H, pilar, headline, img) {
   roundRect(ctx, 56, 48, 224, 48, 24); ctx.fill()
   ctx.font = '600 22px Inter, sans-serif'; ctx.fillStyle = C.purple
   ctx.fillText('Argo Method', 76, 80)
-  // Chip at y=780, headline starts at y=836
-  drawPilarChip(ctx, pilar, 56, 780)
+  // Chip at y=760, headline starts at y=840 (80px gap from chip bottom)
+  drawPilarChip(ctx, pilar, 56, 760)
   ctx.font = 'bold 54px Inter, sans-serif'; ctx.fillStyle = C.white
-  wrapLines(ctx, headline, 56, 836, W - 80, 66)
+  wrapLines(ctx, headline, 56, 848, W - 80, 66)
   // Footer always at bottom 72px strip
   ctx.fillStyle = C.purple; ctx.fillRect(0, 1008, W, 72)
   ctx.font = '500 22px Inter, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.65)'
@@ -119,9 +119,9 @@ export function renderIgB(ctx, W, H, pilar, headline) {
   ctx.font = '500 20px Inter, sans-serif'; ctx.fillStyle = C.white; ctx.fillText('Argo Method', 76, 82)
   ctx.font = 'bold 340px Inter, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.05)'
   ctx.fillText('12', -30, 620)
-  drawPilarChip(ctx, pilar, 56, 810)
+  drawPilarChip(ctx, pilar, 56, 790)
   ctx.font = 'bold 58px Inter, sans-serif'; ctx.fillStyle = C.white
-  wrapLines(ctx, headline, 56, 860, W - 80, 70)
+  wrapLines(ctx, headline, 56, 868, W - 80, 70)
   ctx.fillStyle = 'rgba(29,29,31,0.5)'; ctx.fillRect(0, 1008, W, 72)
   ctx.font = '500 22px Inter, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.65)'
   ctx.fillText('argomethod.com', 56, 1050)
@@ -239,15 +239,14 @@ export function renderCarr01(ctx, W, H, pilar, headline, img) {
   // Paginador
   ctx.font = '500 18px Inter, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.5)'
   ctx.fillText('01 / 05', 940, 78)
-  // Pilar
-  ctx.font = '700 20px Inter, sans-serif'; ctx.fillStyle = C.orange
-  ctx.letterSpacing = '1px'; ctx.fillText(pilar.toUpperCase(), 56, 700); ctx.letterSpacing = '0px'
-  // Headline
+  // Pilar chip (not raw text) + more gap before headline
+  drawPilarChip(ctx, pilar, 56, 700)
+  // Headline: 88px below chip baseline
   ctx.font = 'bold 72px Inter, sans-serif'; ctx.fillStyle = C.white
-  wrapLines(ctx, headline, 56, 762, W - 80, 84)
-  // CTA desliza
+  wrapLines(ctx, headline, 56, 790, W - 80, 84)
+  // CTA in English
   ctx.font = '500 22px Inter, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.6)'
-  ctx.fillText('Desliza y descubrilo  →', 56, 1020)
+  ctx.fillText('Swipe to find out  →', 56, 1020)
 }
 
 // Slides 02-04 — Contenido (claro, número decorativo)
