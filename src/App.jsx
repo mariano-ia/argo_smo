@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import PostCard from './components/PostCard.jsx'
 import CarouselCard from './components/CarouselCard.jsx'
+import StoryCard from './components/StoryCard.jsx'
 import HistoryPanel from './components/HistoryPanel.jsx'
 import UsagePanel, { saveUsageEvent } from './components/UsagePanel.jsx'
 import { supabase } from './lib/supabase.js'
@@ -208,6 +209,11 @@ export default function App() {
           <div style={styles.grid}>
             <PostCard
               platform="instagram"
+              data={igData}
+              bgImage={igImage}
+              loading={isGeneratingImages && igData && !igImage}
+            />
+            <StoryCard
               data={igData}
               bgImage={igImage}
               loading={isGeneratingImages && igData && !igImage}

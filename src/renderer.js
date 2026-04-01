@@ -300,7 +300,9 @@ export function renderCarr05(ctx, W, H, headline, subline) {
 }
 
 export function getTemplateDimensions(template) {
-  return template.startsWith('li') ? { w: 1200, h: 627 } : { w: 1080, h: 1080 }
+  if (template.startsWith('li')) return { w: 1200, h: 627 }
+  if (template.startsWith('story')) return { w: 1080, h: 1920 }
+  return { w: 1080, h: 1080 }
 }
 
 export function renderTemplate(ctx, template, pilar, headline, img, extra) {
@@ -316,4 +318,70 @@ export function renderTemplate(ctx, template, pilar, headline, img, extra) {
   else if (template === 'carr03') renderCarrContent(ctx, w, h, 3, headline, extra?.body || '')
   else if (template === 'carr04') renderCarrContent(ctx, w, h, 4, headline, extra?.body || '')
   else if (template === 'carr05') renderCarr05(ctx, w, h, headline, extra?.subline)
+  else if (template === 'storyA') renderStoryA(ctx, w, h, pilar, headline, img)
+  else if (template === 'storyB') renderStoryB(ctx, w, h, pilar, headline)
+}
+
+// ── INSTAGRAM STORIES 1080x1920 ─────────────────────────────────────────────
+
+export function renderStoryA(ctx, W, H, pilar, headline, img) {
+  // Full bleed image + dark overlay bottom half
+  ctx.fillStyle = '#1D1D1F'; ctx.fillRect(0, 0, W, H)
+  if (img) {
+    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.clip()
+    drawBg(ctx, img, 0, 0, W, H); ctx.restore()
+  }
+  // Gradient overlay — starts at 40% from top
+  const grad = ctx.createLinearGradient(0, H * 0.38, 0, H)
+  grad.addColorStop(0, 'rgba(29,29,31,0)')
+  grad.addColorStop(0.6, 'rgba(29,29,31,0.85)')
+  grad.addColorStop(1, 'rgba(29,29,31,0.97)')
+  ctx.fillStyle = grad; ctx.fillRect(0, H * 0.38, W, H * 0.62)
+  // Top purple bar + bottom orange bar
+  ctx.fillStyle = C.purple; ctx.fillRect(0, 0, W, 8)
+  ctx.fillStyle = C.orange; ctx.fillRect(0, H - 8, W, 8)
+  // Logo pill
+  ctx.fillStyle = 'rgba(149,95,181,0.9)'
+  roundRect(ctx, 64, 88, 264, 60, 30); ctx.fill()
+  ctx.font = '600 27px Inter, sans-serif'; ctx.fillStyle = C.white
+  ctx.fillText('Argo Method', 96, 128)
+  // Pilar chip — positioned in lower third
+  drawPilarChip(ctx, pilar, 64, 1340)
+  // Headline — large, max 4 lines
+  ctx.font = 'bold 88px Inter, sans-serif'; ctx.fillStyle = C.white
+  wrapLines(ctx, headline, 64, 1420, W - 100, 104)
+  // Footer
+  ctx.fillStyle = C.purple; ctx.fillRect(0, H - 96, W, 96)
+  ctx.font = '500 28px Inter, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.65)'
+  ctx.fillText('argomethod.com', 64, H - 34)
+  ctx.fillStyle = C.orange; ctx.beginPath(); ctx.arc(W - 80, H - 54, 14, 0, Math.PI * 2); ctx.fill()
+}
+
+export function renderStoryB(ctx, W, H, pilar, headline) {
+  // Solid purple background
+  ctx.fillStyle = C.purple; ctx.fillRect(0, 0, W, H)
+  // Decorative circles
+  ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.beginPath(); ctx.arc(880, -150, 420, 0, Math.PI * 2); ctx.fill()
+  ctx.fillStyle = 'rgba(249,115,22,0.18)'; ctx.beginPath(); ctx.arc(-80, 1650, 300, 0, Math.PI * 2); ctx.fill()
+  // Top orange + bottom orange bars
+  ctx.fillStyle = C.orange; ctx.fillRect(0, 0, W, 8)
+  ctx.fillStyle = C.orange; ctx.fillRect(0, H - 8, W, 8)
+  // Logo pill
+  ctx.fillStyle = 'rgba(255,255,255,0.14)'
+  roundRect(ctx, 64, 88, 264, 60, 30); ctx.fill()
+  ctx.font = '600 27px Inter, sans-serif'; ctx.fillStyle = C.white
+  ctx.fillText('Argo Method', 96, 128)
+  // Big decorative number ghost
+  ctx.font = 'bold 680px Inter, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.05)'
+  ctx.fillText('12', -60, 1200)
+  // Pilar chip
+  drawPilarChip(ctx, pilar, 64, 1380)
+  // Headline
+  ctx.font = 'bold 88px Inter, sans-serif'; ctx.fillStyle = C.white
+  wrapLines(ctx, headline, 64, 1460, W - 100, 104)
+  // Footer
+  ctx.fillStyle = 'rgba(29,29,31,0.4)'; ctx.fillRect(0, H - 96, W, 96)
+  ctx.font = '500 28px Inter, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.65)'
+  ctx.fillText('argomethod.com', 64, H - 34)
+  ctx.fillStyle = C.orange; ctx.beginPath(); ctx.arc(W - 80, H - 54, 14, 0, Math.PI * 2); ctx.fill()
 }
